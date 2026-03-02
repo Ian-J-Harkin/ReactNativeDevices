@@ -28,6 +28,7 @@ export enum ConnectionState {
     ACTIVE = 'ACTIVE',
     RECONNECTING = 'RECONNECTING',
     TEARDOWN = 'TEARDOWN',
+    TIMEOUT = 'TIMEOUT',
 }
 
 /**
@@ -40,6 +41,7 @@ export enum WorkoutStatus {
     WORKING_OUT = 'WORKING_OUT',
     PAUSED = 'PAUSED',
     FINISHED = 'FINISHED',
+    TIMEOUT = 'TIMEOUT',
 }
 
 /**

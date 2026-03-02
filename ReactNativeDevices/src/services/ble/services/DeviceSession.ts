@@ -155,9 +155,13 @@ export class DeviceSession {
             // Step 2: Start identification race
             this.setState(ConnectionState.IDENTIFYING);
             await this.runIdentificationRace(deviceId);
-        } catch (error) {
+        } catch (error: any) {
             console.error('[DeviceSession] Connection failed:', error);
-            this.setState(ConnectionState.DISCONNECTED);
+            if (error.message === 'Protocol identification timed out') {
+                this.setState(ConnectionState.TIMEOUT);
+            } else {
+                this.setState(ConnectionState.DISCONNECTED);
+            }
             throw error;
         }
     }

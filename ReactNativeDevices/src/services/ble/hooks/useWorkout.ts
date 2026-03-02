@@ -113,6 +113,9 @@ export function useWorkout(): UseWorkoutResult {
                 case ConnectionState.TEARDOWN:
                     setStatus(WorkoutStatus.FINISHED);
                     break;
+                case ConnectionState.TIMEOUT:
+                    setStatus(WorkoutStatus.TIMEOUT);
+                    break;
             }
         });
 
