@@ -1,4 +1,4 @@
-import React, from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { UseWorkoutResult, ScannedDevice } from '../services/ble';
 import { WorkoutStatus } from '../services/ble/types/protocol';
