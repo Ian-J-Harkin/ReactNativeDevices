@@ -2,25 +2,21 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from 'react-native-paper';
-import { useUserStore } from '../src/services/storage/UserStore';
-import { WeeklyOverviewCard } from '../src/components/dashboard/WeeklyOverviewCard';
-import { WorkoutHistoryItem, WorkoutHistoryData } from '../src/components/dashboard/WorkoutHistoryItem';
-import { GoldButton } from '../src/components/ui/GoldButton';
-import { SectionHeader } from '../src/components/ui/SectionHeader';
-import { Radii, Spacing } from '../src/theme/theme';
-
-// Mock data until Phase 4 WorkoutStore is built
-const MOCK_HISTORY: WorkoutHistoryData[] = [
-    { id: '1', deviceName: 'SportPlus Crosstrainer', protocolType: 'FTMS', dateStr: 'Today', durationMinutes: 45, distanceMeters: 8500 },
-    { id: '2', deviceName: 'SportPlus X-Bike', protocolType: 'FitShow', dateStr: 'Yesterday', durationMinutes: 30, distanceMeters: 12000 },
-    { id: '3', deviceName: 'SportPlus Rudergerät', protocolType: 'DelighTech', dateStr: '22 April', durationMinutes: 20, distanceMeters: 4000 },
-];
+import { useUserStore } from '../../src/services/storage/UserStore';
+import { useWorkoutStore } from '../../src/services/storage/WorkoutStore';
+import { WeeklyOverviewCard } from '../../src/components/dashboard/WeeklyOverviewCard';
+import { WorkoutHistoryItem } from '../../src/components/dashboard/WorkoutHistoryItem';
+import { GoldButton } from '../../src/components/ui/GoldButton';
+import { SectionHeader } from '../../src/components/ui/SectionHeader';
+import { Radii, Spacing } from '../../src/theme/theme';
 
 export default function DashboardScreen() {
     const theme = useTheme();
     const router = useRouter();
 
     const { profiles, activeProfileId } = useUserStore();
+    const { getSessionsForUser, getWeeklySummary } = useWorkoutStore();
+
     const activeProfile = profiles.find(p => p.id === activeProfileId);
 
     // Redirect to welcome if no active profile exists (Onboarding check)
@@ -38,6 +34,11 @@ export default function DashboardScreen() {
         router.push('/workout'); // Navigate to workout flow
     };
 
+    const recentSessions = activeProfileId ? getSessionsForUser(activeProfileId).slice(0, 3) : [];
+    const weeklyStats = activeProfileId
+        ? getWeeklySummary(activeProfileId)
+        : { workouts: 0, minutes: 0, calories: 0 };
+
     const renderHeader = () => (
         <View>
             <View style={styles.header}>
@@ -52,14 +53,14 @@ export default function DashboardScreen() {
             </View>
 
             <WeeklyOverviewCard
-                workoutsThisWeek={3}
-                minutesThisWeek={95}
-                caloriesThisWeek={840}
-                onDetailsPress={() => { }} // Placeholder for History phase
+                workoutsThisWeek={weeklyStats.workouts}
+                minutesThisWeek={weeklyStats.minutes}
+                caloriesThisWeek={weeklyStats.calories}
+                onDetailsPress={() => router.push('/workout/history')}
             />
 
             <GoldButton
-                title="Start previous workout"
+                title="Start new workout"
                 variant="black"
                 onPress={handleStartPrevious}
                 fullWidth
@@ -69,7 +70,7 @@ export default function DashboardScreen() {
             <SectionHeader
                 title="PREVIOUS WORKOUTS"
                 actionTitle="History"
-                onActionPress={() => { }} // Placeholder
+                onActionPress={() => router.push('/workout/history')}
             />
         </View>
     );
@@ -77,14 +78,30 @@ export default function DashboardScreen() {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <FlatList
-                data={MOCK_HISTORY}
+                data={recentSessions}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <WorkoutHistoryItem
-                        workout={item}
-                        onPress={() => { }}
-                    />
-                )}
+                renderItem={({ item }) => {
+                    const formattedWorkout = {
+                        id: item.id,
+                        deviceName: item.deviceName,
+                        protocolType: item.protocolType,
+                        dateStr: new Date(item.timestampStart).toLocaleDateString(),
+                        durationMinutes: Math.floor(item.durationSeconds / 60),
+                        distanceMeters: item.distanceMeters,
+                    };
+
+                    return (
+                        <WorkoutHistoryItem
+                            workout={formattedWorkout}
+                            onPress={() => router.push('/workout/history')}
+                        />
+                    );
+                }}
+                ListEmptyComponent={
+                    <View style={{ padding: Spacing.xl, alignItems: 'center', opacity: 0.5 }}>
+                        <Text style={{ color: theme.colors.onSurfaceVariant }}>No workouts recorded yet.</Text>
+                    </View>
+                }
                 ListHeaderComponent={renderHeader}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
