@@ -1,19 +1,22 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-paper';
 import { UseWorkoutResult } from '../services/ble';
 import { ConnectionHeader } from './ConnectionHeader';
 import { TelemetryGrid } from './TelemetryGrid';
 import { ControlBar } from './ControlBar';
+import { Spacing } from '../theme/theme';
 
 interface Props {
     workout: UseWorkoutResult;
 }
 
 export const WorkoutDashboard: React.FC<Props> = ({ workout }) => {
+    const theme = useTheme();
     const { data, status, protocolName, isStale, start, pause, disconnect, setResistance } = workout;
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <ConnectionHeader
                 status={status}
                 protocolName={protocolName}
@@ -39,7 +42,7 @@ export const WorkoutDashboard: React.FC<Props> = ({ workout }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000', // Premium dark mode
-        padding: 20,
+        padding: Spacing.lg,
+        paddingTop: Spacing.xl * 1.5, // accommodate safe area natively for now
     },
 });

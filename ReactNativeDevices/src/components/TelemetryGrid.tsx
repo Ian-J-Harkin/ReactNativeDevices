@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { useTheme } from 'react-native-paper';
 import { WorkoutState } from '../services/ble/types/protocol';
 import { MetricCard } from './MetricCard';
+import { Radii, Spacing } from '../theme/theme';
 
 interface Props {
     data: WorkoutState | null;
@@ -9,25 +11,47 @@ interface Props {
 }
 
 export const TelemetryGrid: React.FC<Props> = ({ data, isStale }) => {
+    const theme = useTheme();
     const displayData = data || { speed: 0, cadence: 0, distance: 0, heartRate: 0 };
 
     return (
         <View style={styles.container}>
             {isStale && (
-                <View style={styles.staleOverlay}>
-                    <ActivityIndicator size="large" color="#ff9f0a" />
-                    <Text style={styles.staleWarningText}>Signal Lost - Reconnecting...</Text>
+                <View style={[styles.staleOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.6)' }]}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                    <Text style={[styles.staleWarningText, { color: theme.colors.primary }]}>Signal Lost - Reconnecting...</Text>
                 </View>
             )}
             <View style={[styles.bentoGrid, isStale && styles.staleOpacity]}>
                 <View style={styles.row}>
-                    <MetricCard label="SPEED" value={displayData.speed?.toFixed(1) || '0.0'} unit="km/h" primary />
-                    <MetricCard label="CADENCE" value={displayData.cadence?.toFixed(0) || '0'} unit="RPM" primary />
+                    <MetricCard
+                        label="SPEED"
+                        value={displayData.speed?.toFixed(1) || '0.0'}
+                        unit="km/h"
+                        icon="clock"
+                    />
+                    <MetricCard
+                        label="CADENCE"
+                        value={displayData.cadence?.toFixed(0) || '0'}
+                        unit="RPM"
+                        icon="clock"
+                    />
                 </View>
 
                 <View style={styles.row}>
-                    <MetricCard label="DISTANCE" value={displayData.distance || 0} unit="m" />
-                    <MetricCard label="HEART RATE" value={displayData.heartRate || '--'} unit="BPM" color="#ff453a" />
+                    <MetricCard
+                        label="DISTANCE"
+                        value={displayData.distance || 0}
+                        unit="m"
+                        icon="clock"
+                    />
+                    <MetricCard
+                        label="HEART RATE"
+                        value={displayData.heartRate || '--'}
+                        unit="BPM"
+                        icon="heart"
+                        highlight
+                    />
                 </View>
             </View>
         </View>
@@ -37,34 +61,29 @@ export const TelemetryGrid: React.FC<Props> = ({ data, isStale }) => {
 const styles = StyleSheet.create({
     container: {
         position: 'relative',
-        marginBottom: 30,
+        marginBottom: Spacing.xl,
     },
     staleOverlay: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        top: 0, left: 0, right: 0, bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 10,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 24,
+        borderRadius: Radii.lg,
     },
     staleWarningText: {
-        color: '#ff9f0a',
         fontSize: 16,
-        fontWeight: 'bold',
-        marginTop: 10,
+        fontWeight: '700',
+        marginTop: Spacing.sm,
     },
     staleOpacity: {
         opacity: 0.5,
     },
     bentoGrid: {
-        gap: 16,
+        gap: Spacing.md,
     },
     row: {
         flexDirection: 'row',
-        gap: 16,
+        gap: Spacing.md,
     },
 });

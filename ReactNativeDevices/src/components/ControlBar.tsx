@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
+import { useTheme } from 'react-native-paper';
 import { WorkoutStatus } from '../services/ble/types/protocol';
+import { GoldButton } from './ui/GoldButton';
+import { AppIcon } from './ui/AppIcon';
+import { Radii, Spacing } from '../theme/theme';
 
 interface Props {
     status: WorkoutStatus;
@@ -12,6 +16,7 @@ interface Props {
 }
 
 export const ControlBar: React.FC<Props> = ({ status, resistance, onStart, onPause, onResistanceChange }) => {
+    const theme = useTheme();
     const [sliderValue, setSliderValue] = useState(resistance);
 
     useEffect(() => {
@@ -23,8 +28,13 @@ export const ControlBar: React.FC<Props> = ({ status, resistance, onStart, onPau
 
     return (
         <View style={styles.controls}>
-            <View style={styles.resistanceControl}>
-                <Text style={styles.label}>RESISTANCE LEVEL: {sliderValue}</Text>
+            <View style={[styles.resistanceControl, { backgroundColor: theme.colors.surface }]}>
+                <View style={styles.resistanceHeader}>
+                    <AppIcon name="dumbbell" size={16} color={theme.colors.onSurfaceVariant} />
+                    <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
+                        RESISTANCE LEVEL: <Text style={{ color: theme.colors.onSurface }}>{sliderValue}</Text>
+                    </Text>
+                </View>
                 <Slider
                     style={styles.slider}
                     minimumValue={1}
@@ -33,21 +43,28 @@ export const ControlBar: React.FC<Props> = ({ status, resistance, onStart, onPau
                     value={resistance}
                     onValueChange={(val) => setSliderValue(val)}
                     onSlidingComplete={onResistanceChange}
-                    minimumTrackTintColor="#007AFF"
-                    maximumTrackTintColor="#d1d1d6"
-                    thumbTintColor="#007AFF"
+                    minimumTrackTintColor={theme.colors.primary}
+                    maximumTrackTintColor={theme.colors.surfaceDisabled}
+                    thumbTintColor={theme.colors.primary}
                 />
             </View>
 
             <View style={styles.stateControls}>
                 {!isWorkingOut ? (
-                    <TouchableOpacity style={[styles.controlBtn, styles.startBtn]} onPress={onStart}>
-                        <Text style={styles.controlBtnText}>{isPaused ? 'Resume' : 'Start Workout'}</Text>
-                    </TouchableOpacity>
+                    <GoldButton
+                        title={isPaused ? "Resume" : "Start Workout"}
+                        onPress={onStart}
+                        fullWidth
+                        style={{ flex: 1 }}
+                    />
                 ) : (
-                    <TouchableOpacity style={[styles.controlBtn, styles.pauseBtn]} onPress={onPause}>
-                        <Text style={styles.controlBtnText}>Pause Workout</Text>
-                    </TouchableOpacity>
+                    <GoldButton
+                        title="Pause Workout"
+                        variant="secondary"
+                        onPress={onPause}
+                        fullWidth
+                        style={{ flex: 1 }}
+                    />
                 )}
             </View>
         </View>
@@ -57,48 +74,30 @@ export const ControlBar: React.FC<Props> = ({ status, resistance, onStart, onPau
 const styles = StyleSheet.create({
     controls: {
         marginTop: 'auto',
-        gap: 24,
+        gap: Spacing.lg,
+        paddingBottom: Spacing.xl,
     },
     resistanceControl: {
-        backgroundColor: '#1c1c1e',
-        padding: 20,
-        borderRadius: 20,
+        padding: Spacing.lg,
+        borderRadius: Radii.lg,
+    },
+    resistanceHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.sm,
     },
     label: {
         fontSize: 12,
-        color: '#8e8e93',
         fontWeight: '700',
         letterSpacing: 1,
-        marginBottom: 8,
     },
     slider: {
         width: '100%',
         height: 40,
-        marginTop: 8,
+        marginTop: Spacing.sm,
     },
     stateControls: {
         flexDirection: 'row',
-        gap: 16,
-        marginBottom: 30,
+        gap: Spacing.md,
     },
-    controlBtn: {
-        flex: 1,
-        paddingVertical: 18,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    startBtn: {
-        backgroundColor: '#30d158',
-    },
-    pauseBtn: {
-        backgroundColor: '#ff9f0a',
-    },
-    controlBtnText: {
-        color: '#000',
-        fontSize: 18,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    }
 });

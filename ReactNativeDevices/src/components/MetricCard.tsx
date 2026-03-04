@@ -1,63 +1,70 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-paper';
+import { AppIcon, IconName } from './ui/AppIcon';
+import { Radii, Spacing } from '../theme/theme';
 
 interface Props {
     label: string;
     value: string | number;
     unit: string;
-    primary?: boolean;
-    color?: string;
+    icon?: IconName;
+    highlight?: boolean;
 }
 
-export const MetricCard: React.FC<Props> = ({ label, value, unit, primary = false, color = '#fff' }) => {
+export const MetricCard: React.FC<Props> = ({ label, value, unit, icon, highlight = false }) => {
+    const theme = useTheme();
+
     return (
-        <View style={[styles.bentoBox, primary ? styles.bentoLarge : styles.bentoSmall]}>
-            <Text style={styles.label}>{label}</Text>
-            <Text style={[primary ? styles.valueLarge : styles.valueSmall, { color }]}>{value}</Text>
-            <Text style={styles.unit}>{unit}</Text>
+        <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+            <View style={styles.header}>
+                {icon && (
+                    <AppIcon
+                        name={icon}
+                        size={16}
+                        color={highlight ? theme.colors.error : theme.colors.primary}
+                    />
+                )}
+                <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
+            </View>
+            <View style={styles.valueContainer}>
+                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{value}</Text>
+                <Text style={[styles.unit, { color: theme.colors.onSurfaceVariant }]}>{unit}</Text>
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    bentoBox: {
-        backgroundColor: '#1c1c1e',
-        borderRadius: 24,
-        padding: 20,
-        justifyContent: 'center',
+    card: {
+        flex: 1,
+        padding: Spacing.md,
+        borderRadius: Radii.lg,
+        minHeight: 90,
+        justifyContent: 'space-between',
+    },
+    header: {
+        flexDirection: 'row',
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#2c2c2e',
-    },
-    bentoLarge: {
-        flex: 1,
-        aspectRatio: 1,
-    },
-    bentoSmall: {
-        flex: 1,
-        aspectRatio: 1.5,
+        gap: 6,
     },
     label: {
-        fontSize: 12,
-        color: '#8e8e93',
+        fontSize: 10,
         fontWeight: '700',
+        textTransform: 'uppercase',
         letterSpacing: 1,
-        marginBottom: 8,
     },
-    valueLarge: {
-        fontSize: 48,
-        fontWeight: '900',
-        fontVariant: ['tabular-nums'],
+    valueContainer: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: 4,
     },
-    valueSmall: {
-        fontSize: 32,
-        fontWeight: '800',
-        fontVariant: ['tabular-nums'],
+    value: {
+        fontSize: 28,
+        fontWeight: '700',
     },
     unit: {
-        fontSize: 14,
-        color: '#636366',
+        fontSize: 12,
         fontWeight: '600',
-        marginTop: 4,
     },
 });
