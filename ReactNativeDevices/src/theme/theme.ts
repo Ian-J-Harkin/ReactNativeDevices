@@ -55,5 +55,6 @@ export const Radii = {
     sm: 8,
     md: 12,
     lg: 20,
+    xl: 24,
     pill: 9999,
 };
