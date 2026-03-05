@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from 'react-native-paper';
-import { AppIcon } from '../../../../src/components/ui/AppIcon';
-import { GoldButton } from '../../../../src/components/ui/GoldButton';
-import { Radii, Spacing } from '../../../../src/theme/theme';
+import { AppIcon } from '../../../src/components/ui/AppIcon';
+import { GoldButton } from '../../../src/components/ui/GoldButton';
+import { Radii, Spacing } from '../../../src/theme/theme';
 
 const DURATIONS = [15, 30, 45, 'Custom'];
 
@@ -85,7 +85,7 @@ export default function WorkoutSetupScreen() {
                         style={[styles.resBtn, { backgroundColor: theme.colors.surface }]}
                         onPress={() => setResistance(Math.max(1, resistance - 1))}
                     >
-                        <AppIcon name="minus" size={32} color={theme.colors.primary} />
+                        <AppIcon name="chevron-left" size={32} color={theme.colors.primary} />
                     </TouchableOpacity>
 
                     <Text style={[styles.resValue, { color: theme.colors.onSurface }]}>
@@ -96,7 +96,7 @@ export default function WorkoutSetupScreen() {
                         style={[styles.resBtn, { backgroundColor: theme.colors.surface }]}
                         onPress={() => setResistance(Math.min(32, resistance + 1))}
                     >
-                        <AppIcon name="plus" size={32} color={theme.colors.primary} />
+                        <AppIcon name="chevron-right" size={32} color={theme.colors.primary} />
                     </TouchableOpacity>
                 </View>
 

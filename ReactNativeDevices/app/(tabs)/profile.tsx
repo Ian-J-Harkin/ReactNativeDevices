@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from 'react-native-paper';
-import { useUserStore } from '../src/services/storage/UserStore';
-import { AppIcon } from '../src/components/ui/AppIcon';
-import { GoldButton } from '../src/components/ui/GoldButton';
-import { SectionHeader } from '../src/components/ui/SectionHeader';
-import { Radii, Spacing } from '../src/theme/theme';
+import { useUserStore } from '../../src/services/storage/UserStore';
+import { AppIcon } from '../../src/components/ui/AppIcon';
+import { GoldButton } from '../../src/components/ui/GoldButton';
+import { SectionHeader } from '../../src/components/ui/SectionHeader';
+import { Radii, Spacing } from '../../src/theme/theme';
 
 export default function ProfileScreen() {
     const theme = useTheme();
@@ -80,7 +80,10 @@ export default function ProfileScreen() {
                 {/* Preferences / Settings Menu */}
                 <SectionHeader title="PREFERENCES" />
 
-                <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.surface }]}>
+                <TouchableOpacity
+                    style={[styles.menuItem, { backgroundColor: theme.colors.surface }]}
+                    onPress={() => router.push('/devices')}
+                >
                     <AppIcon name="bluetooth" size={24} color={theme.colors.onSurfaceVariant} />
                     <Text style={[styles.menuText, { color: theme.colors.onSurface }]}>Manage Devices</Text>
                     <AppIcon name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
