@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from 'react-native-paper';
@@ -6,20 +6,31 @@ import { AppIcon } from '../../../../src/components/ui/AppIcon';
 import { Spacing, Radii } from '../../../../src/theme/theme';
 import { useWorkout } from '../../../../src/services/ble/hooks/useWorkout';
 import { WorkoutStatus } from '../../../../src/services/ble/types/protocol';
+import { useWorkoutStore } from '../../../../src/services/storage/WorkoutStore';
+import { useUserStore } from '../../../../src/services/storage/UserStore';
 
 export default function ActiveWorkoutScreen() {
-    const { id, duration, resistance } = useLocalSearchParams();
+    const { id, duration, resistance, deviceName } = useLocalSearchParams();
     const router = useRouter();
     const theme = useTheme();
+
+    const { activeProfileId } = useUserStore();
+    const { saveSession } = useWorkoutStore();
+
+    const [elapsedSeconds, setElapsedSeconds] = useState(0);
+    const startTimeRef = useRef<number | null>(null);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const {
         data,
         status,
         isStale,
+        protocolName,
         start,
         pause,
         disconnect,
-        setResistance
+        setResistance,
+        connect
     } = useWorkout();
 
     // Start workout on mount
@@ -41,6 +52,48 @@ export default function ActiveWorkoutScreen() {
         };
     }, []);
 
+    // Timer logic
+    useEffect(() => {
+        if (status === WorkoutStatus.WORKING_OUT) {
+            if (!startTimeRef.current) {
+                startTimeRef.current = Date.now();
+            }
+            timerRef.current = setInterval(() => {
+                setElapsedSeconds((prev) => prev + 1);
+            }, 1000);
+        } else {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+        }
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, [status]);
+
+    // Handle Timeout Status
+    useEffect(() => {
+        if (status === WorkoutStatus.TIMEOUT) {
+            Alert.alert(
+                "Connection Timeout",
+                "We couldn't identify your device. Make sure it's powered on and in range.",
+                [
+                    { text: "Go Back", style: "cancel", onPress: () => router.back() },
+                    {
+                        text: "Retry", onPress: () => {
+                            if (typeof id === 'string') {
+                                connect(id);
+                            }
+                        }
+                    }
+                ]
+            );
+        }
+    }, [status, id, connect, router]);
+
     const handlePlayPause = async () => {
         if (status === WorkoutStatus.WORKING_OUT) {
             await pause();
@@ -61,7 +114,43 @@ export default function ActiveWorkoutScreen() {
                     onPress: async () => {
                         await pause();
                         await disconnect();
-                        router.replace(`/workout/history`); // Or summary screen
+
+                        const finalDuration = elapsedSeconds;
+                        const finalDistance = data?.distance || 0;
+                        const finalCalories = data?.calories || 0;
+                        const finalPower = data?.power || 0;
+                        const finalHR = data?.heartRate || 0;
+                        const finalSpeed = data?.speed || 0;
+
+                        if (activeProfileId) {
+                            saveSession({
+                                userId: activeProfileId,
+                                workoutId: Array.isArray(id) ? id[0] : (id || "unknown"),
+                                title: "Freeride",
+                                deviceName: typeof deviceName === 'string' ? deviceName : "Unknown Device",
+                                protocolType: protocolName || "Unknown",
+                                timestampStart: startTimeRef.current || (Date.now() - finalDuration * 1000),
+                                durationSeconds: finalDuration,
+                                distanceMeters: finalDistance,
+                                caloriesBurned: finalCalories,
+                                avgWatts: finalPower,
+                                avgHeartRate: finalHR,
+                                avgSpeedKmph: finalSpeed,
+                                chartData: []
+                            });
+                        }
+
+                        router.replace({
+                            pathname: '/workout/summary',
+                            params: {
+                                duration: finalDuration,
+                                distance: finalDistance,
+                                calories: finalCalories,
+                                avgPower: finalPower,
+                                avgHR: finalHR,
+                                avgSpeed: finalSpeed,
+                            }
+                        });
                     }
                 }
             ]
@@ -73,13 +162,19 @@ export default function ActiveWorkoutScreen() {
         router.back();
     };
 
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
     // Safe access to metrics
     const speed = data?.speed?.toFixed(1) || '0.0';
     const rpm = data?.cadence?.toFixed(0) || '0';
     const distance = data?.distance ? (data.distance / 1000).toFixed(2) : '0.00';
     const hr = data?.heartRate?.toFixed(0) || '--';
     const pwr = data?.power?.toFixed(0) || '--';
-    const kcal = data?.calories?.toFixed(0) || '0'; // Assuming calories is mapped if available, otherwise just mock
+    const kcal = data?.calories?.toFixed(0) || '0';
     const currentRes = data?.resistance ?? resistance ?? 1;
 
     // Dark theme overrides
@@ -118,11 +213,11 @@ export default function ActiveWorkoutScreen() {
 
                 {/* 2x3 Metric Grid */}
                 <View style={styles.grid}>
-                    {/* Time (Mocked for now since DataAccumulator doesn't track time natively yet) */}
+                    {/* Time */}
                     <View style={[styles.gridItem, { backgroundColor: darkColors.surface }]}>
                         <AppIcon name="clock" size={20} color={darkColors.gold} />
-                        <Text style={[styles.gridValue, { color: isStale ? darkColors.staleText : darkColors.textPrimary }]}>00:00</Text>
-                        <Text style={[styles.gridLabel, { color: darkColors.textSecondary }]}>hh:mm</Text>
+                        <Text style={[styles.gridValue, { color: isStale ? darkColors.staleText : darkColors.textPrimary }]}>{formatTime(elapsedSeconds)}</Text>
+                        <Text style={[styles.gridLabel, { color: darkColors.textSecondary }]}>mm:ss</Text>
                     </View>
 
                     {/* Speed */}

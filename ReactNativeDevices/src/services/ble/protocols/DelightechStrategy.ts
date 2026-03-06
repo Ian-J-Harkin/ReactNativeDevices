@@ -31,6 +31,13 @@ const CMD_WORKOUT_DATA = 0x44; // Workout data notification prefix
 const CMD_PING = 0x20;        // Keep-alive / data request
 const CMD_START = 0x01;
 const CMD_PAUSE = 0x02;
+/**
+ * STOP opcode — inferred from the sequential pattern (START=0x01, PAUSE=0x02).
+ * No official Delightech BLE spec exists; validate via nRF Connect packet capture
+ * against the vendor's app if available. Fallback: some Delightech consoles implement
+ * an FTMS-like subset — scan for service 0x1826 as a cross-compatibility check.
+ */
+const CMD_STOP = 0x03;
 const CMD_SET_RESISTANCE = 0x04;
 
 /** Standard Delightech packet length (padded with 0x00) */
@@ -104,6 +111,9 @@ export class DelightechStrategy implements IProtocol {
 
             case CommandType.PAUSE:
                 return [this.buildPacket([CMD_PING, CMD_PAUSE])];
+
+            case CommandType.STOP:
+                return [this.buildPacket([CMD_PING, CMD_STOP])];
 
             case CommandType.SET_RESISTANCE: {
                 const level = params?.level ?? 0;

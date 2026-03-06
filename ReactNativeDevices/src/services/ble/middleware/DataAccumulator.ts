@@ -19,6 +19,7 @@
 // ============================================================
 
 import { WorkoutState, ProtocolType } from '../types/protocol';
+import { UnifiedWorkoutDataSchema } from '../types/schemas';
 
 /**
  * Per-field tracking: the last known good value and when it was seen.
@@ -101,6 +102,15 @@ export class DataAccumulator {
             timestamp: now,
             protocol: partial.protocol ?? ProtocolType.FTMS,
         };
+
+        // Non-blocking runtime validation
+        const validation = UnifiedWorkoutDataSchema.safeParse(result);
+        if (!validation.success) {
+            console.warn(
+                '[DataAccumulator] Validation Failed:',
+                validation.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+            );
+        }
 
         return result;
     }

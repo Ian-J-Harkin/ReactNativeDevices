@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, FlatList, ScrollView, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from 'react-native-paper';
 import { FilterChip } from '../../src/components/ui/FilterChip';
@@ -22,10 +22,18 @@ export default function WorkoutBrowseScreen() {
     const router = useRouter();
 
     const [activeCategory, setActiveCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredWorkouts = activeCategory === 'All'
-        ? MOCK_WORKOUTS
-        : MOCK_WORKOUTS.filter(w => w.type === activeCategory);
+    const handleCategorySelect = (category: string) => {
+        setActiveCategory(category);
+        setSearchQuery(''); // Clear search when changing category
+    };
+
+    const filteredWorkouts = MOCK_WORKOUTS.filter(w => {
+        const matchesCategory = activeCategory === 'All' || w.type === activeCategory;
+        const matchesSearch = w.title.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
 
     const handleWorkoutPress = (id: string) => {
         router.push(`/workout/${id}/details`);
@@ -41,10 +49,16 @@ export default function WorkoutBrowseScreen() {
                 <AppIcon name="heart" size={24} color={theme.colors.onSurfaceVariant} />
             </View>
 
-            {/* Search Bar (Mock) */}
+            {/* Search Bar */}
             <View style={[styles.searchBar, { backgroundColor: theme.colors.surface }]}>
                 <AppIcon name="search" size={20} color={theme.colors.onSurfaceVariant} />
-                <Text style={[styles.searchText, { color: theme.colors.onSurfaceVariant }]}>Search</Text>
+                <TextInput
+                    style={[styles.searchInput, { color: theme.colors.onSurface }]}
+                    placeholder="Search workouts"
+                    placeholderTextColor={theme.colors.onSurfaceVariant}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                />
             </View>
 
             {/* Filter Chips */}
@@ -55,7 +69,7 @@ export default function WorkoutBrowseScreen() {
                             key={category}
                             label={category}
                             isActive={activeCategory === category}
-                            onPress={() => setActiveCategory(category)}
+                            onPress={() => handleCategorySelect(category)}
                         />
                     ))}
                 </ScrollView>
@@ -100,13 +114,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginHorizontal: Spacing.lg,
         paddingHorizontal: Spacing.md,
-        paddingVertical: 12,
         borderRadius: Radii.lg,
         marginBottom: Spacing.md,
         gap: Spacing.md,
     },
-    searchText: {
+    searchInput: {
+        flex: 1,
         fontSize: 16,
+        paddingVertical: 12,
     },
     filterContainer: {
         marginBottom: Spacing.md,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from 'react-native-paper';
 import { MetricCard } from '../../src/components/MetricCard';
 import { GoldButton } from '../../src/components/ui/GoldButton';
@@ -9,6 +9,19 @@ import { Radii, Spacing } from '../../src/theme/theme';
 export default function WorkoutSummaryScreen() {
     const theme = useTheme();
     const router = useRouter();
+    const params = useLocalSearchParams();
+
+    // Format duration from seconds to MM:SS
+    const durationSec = Number(params.duration) || 0;
+    const m = Math.floor(durationSec / 60);
+    const s = durationSec % 60;
+    const durationStr = durationSec > 0 ? `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : '--';
+
+    const distStr = params.distance ? (Number(params.distance) / 1000).toFixed(2) : '--';
+    const kcalStr = params.calories ? Number(params.calories).toFixed(0) : '--';
+    const pwrStr = params.avgPower ? Number(params.avgPower).toFixed(0) : '--';
+    const hrStr = params.avgHR ? Number(params.avgHR).toFixed(0) : '--';
+    const speedStr = params.avgSpeed ? Number(params.avgSpeed).toFixed(1) : '--';
 
     const handleReturn = () => {
         router.dismissAll(); // Clear stack
@@ -33,12 +46,12 @@ export default function WorkoutSummaryScreen() {
 
                 {/* Final Stats Grid */}
                 <View style={styles.grid}>
-                    <MetricCard title="Duration" value="30:00" unit="MIN" iconName="clock" />
-                    <MetricCard title="Distance" value="6.5" unit="KM" iconName="play" />
-                    <MetricCard title="Calories" value="320" unit="KCAL" iconName="flame" />
-                    <MetricCard title="Avg Power" value="145" unit="WATT" iconName="dumbbell" />
-                    <MetricCard title="Avg HR" value="132" unit="BPM" iconName="heart" />
-                    <MetricCard title="Avg Speed" value="13.0" unit="KM/H" iconName="search" />
+                    <MetricCard label="Duration" value={durationStr} unit="MIN" icon="clock" />
+                    <MetricCard label="Distance" value={distStr} unit="KM" icon="play" />
+                    <MetricCard label="Calories" value={kcalStr} unit="KCAL" icon="flame" />
+                    <MetricCard label="Avg Power" value={pwrStr} unit="WATT" icon="dumbbell" />
+                    <MetricCard label="Avg HR" value={hrStr} unit="BPM" icon="heart" />
+                    <MetricCard label="Avg Speed" value={speedStr} unit="KM/H" icon="search" />
                 </View>
 
                 <View style={styles.spacer} />

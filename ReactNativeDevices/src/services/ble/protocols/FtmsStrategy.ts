@@ -69,6 +69,19 @@ export class FtmsStrategy implements IProtocol {
 
     /**
      * Generate FTMS Control Point command packets.
+     *
+     * TODO(FTMS-SPEC-REVIEW): The opcodes below come from the original architect spec
+     * (gem_architect_plan.md), which targets Control Point 0x2AD3. The official Bluetooth
+     * SIG "Fitness Machine Service" spec (v1.0 / v1.0.1) defines the Control Point as
+     * 0x2AD9 with different opcodes:
+     *
+     *   0x06 = Stop            (current code: 0x08, 0x01)
+     *   0x07 = Start/Resume    (matches)
+     *   0x10 = Request Control (current code: 0x00)
+     *
+     * The current opcodes work with the devices tested during initial development.
+     * Validate against the Bluetooth SIG assigned numbers (GASS) if targeting
+     * fully-compliant FTMS machines. This should be a separate remediation item.
      */
     getCommand(type: CommandType, params?: Record<string, number>): Uint8Array[] {
         switch (type) {
